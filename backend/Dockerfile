@@ -4,7 +4,7 @@
 # Multi-stage build for optimized image size
 
 # Stage 1: Build stage with all dependencies
-FROM python:3.13-slim as builder
+FROM python:3.13-slim-bookworm as builder
 
 # Set working directory
 WORKDIR /app
@@ -23,7 +23,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Stage 2: Runtime stage
-FROM python:3.13-slim
+FROM python:3.13-slim-bookworm
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
