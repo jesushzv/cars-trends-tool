@@ -83,6 +83,29 @@ class TestPasswordHashing:
         assert hash1 != hash2
         assert verify_password(password, hash1) is True
         assert verify_password(password, hash2) is True
+    
+    def test_hash_long_password_bcrypt_limit(self):
+        """Test that passwords longer than 72 bytes are handled correctly (bcrypt limit)
+        
+        This test prevents CI failures when bcrypt is strict about the 72-byte limit.
+        Different bcrypt versions/environments may handle this differently.
+        """
+        # Create a password longer than 72 bytes
+        long_password = "a" * 100
+        
+        # Should not raise an error (would fail in CI without truncation)
+        hashed = hash_password(long_password)
+        assert isinstance(hashed, str)
+        assert len(hashed) > 0
+        
+        # Should be able to verify with same long password
+        assert verify_password(long_password, hashed) is True
+        
+        # Different long passwords should produce different hashes
+        long_password2 = "b" * 100
+        hashed2 = hash_password(long_password2)
+        assert verify_password(long_password2, hashed2) is True
+        assert verify_password(long_password, hashed2) is False
 
 
 class TestJWTTokens:
