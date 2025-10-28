@@ -16,21 +16,15 @@ sys.path.append(str(Path(__file__).parent.parent))
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt  # Use bcrypt directly, not passlib (avoids environment-specific issues)
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import User
 
-# Password hashing configuration
-# Configure bcrypt to handle passwords > 72 bytes gracefully
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    # Bcrypt-specific configuration for cross-environment consistency
-    bcrypt__ident="2b",                    # Use 2b variant (most compatible)
-    bcrypt__truncate_error=False,          # Don't error on long passwords, truncate silently
-    bcrypt__rounds=12,                     # Explicit rounds for consistency
-)
+# Bcrypt configuration
+# Using bcrypt directly instead of passlib to avoid environment-specific validation issues
+# that caused failures in CI despite working locally
+BCRYPT_ROUNDS = 12  # Cost factor (2^12 iterations)
 
 # JWT configuration (can be overridden with environment variables)
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
@@ -40,38 +34,51 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 
 def hash_password(password: str) -> str:
     """
-    Hash a plain password using bcrypt
+    Hash a plain password using bcrypt directly (no passlib wrapper)
     
     Args:
         password: Plain text password
         
     Returns:
-        Hashed password string
+        Hashed password string (bcrypt format: $2b$12$...)
     
     Note:
-        CryptContext is configured with bcrypt__truncate_error=False,
-        which automatically handles passwords > 72 bytes by truncating them.
-        This ensures consistent behavior across all environments (macOS, Linux, CI).
+        Uses bcrypt directly to avoid passlib's environment-specific validation
+        that caused CI failures. Bcrypt has a 72-byte limit, so we truncate
+        passwords at that boundary.
     """
-    return pwd_context.hash(password)
+    # Convert to bytes and truncate at 72 bytes (bcrypt's maximum)
+    password_bytes = password.encode('utf-8')[:72]
+    
+    # Generate salt and hash
+    salt = bcrypt.gensalt(rounds=BCRYPT_ROUNDS)
+    hashed_bytes = bcrypt.hashpw(password_bytes, salt)
+    
+    # Return as string (bcrypt format)
+    return hashed_bytes.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a password against its hash
+    Verify a password against its bcrypt hash
     
     Args:
         plain_password: Plain text password to verify
-        hashed_password: Hashed password to check against
+        hashed_password: Hashed password to check against (bcrypt format)
         
     Returns:
         True if password matches, False otherwise
     
     Note:
-        CryptContext automatically handles password truncation consistently
-        with how it was hashed (bcrypt__truncate_error=False).
+        Uses bcrypt directly. Truncates password at 72 bytes to match how
+        it was hashed, ensuring consistent verification.
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    # Convert to bytes and truncate at 72 bytes (same as hash_password)
+    password_bytes = plain_password.encode('utf-8')[:72]
+    hashed_bytes = hashed_password.encode('utf-8')
+    
+    # Verify password
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
