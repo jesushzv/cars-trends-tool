@@ -22,7 +22,7 @@ An automated web application for tracking car market trends in Tijuana, Mexico b
 - ✅ **Data Retention**: Automatic cleanup (90-day retention for listings, 180-day for snapshots)
 - ✅ **CI/CD Pipeline**: Automated testing, building, and deployment
 - ✅ **Docker Deployment**: All services containerized and production-ready
-- ✅ **Test Coverage**: 72% coverage with comprehensive E2E tests
+- ✅ **Test Coverage**: 70% coverage with 235 comprehensive tests
 
 **Status**: Production-ready with fully automated operations ✅
 
