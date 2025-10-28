@@ -44,9 +44,10 @@ def hash_password(password: str) -> str:
         Bcrypt has a 72-byte password limit. We truncate to ensure compatibility
         across different bcrypt versions and environments.
     """
-    # Bcrypt limitation: max 72 bytes. Truncate if needed for cross-environment compatibility
-    if len(password.encode('utf-8')) > 72:
-        password = password[:72]
+    # Bcrypt limitation: max 72 bytes. Truncate bytes, not characters, for safety
+    # Convert to bytes, truncate at 72 bytes, then back to string
+    password_bytes = password.encode('utf-8')[:72]
+    password = password_bytes.decode('utf-8', errors='ignore')
     
     return pwd_context.hash(password)
 
@@ -65,9 +66,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Note:
         Applies same 72-byte truncation as hash_password for consistency
     """
-    # Apply same truncation as hash_password for consistency
-    if len(plain_password.encode('utf-8')) > 72:
-        plain_password = plain_password[:72]
+    # Apply same byte truncation as hash_password for consistency
+    password_bytes = plain_password.encode('utf-8')[:72]
+    plain_password = password_bytes.decode('utf-8', errors='ignore')
     
     return pwd_context.verify(plain_password, hashed_password)
 
