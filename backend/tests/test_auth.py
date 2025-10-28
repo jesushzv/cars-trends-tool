@@ -88,12 +88,12 @@ class TestPasswordHashing:
         """Test that passwords longer than 72 bytes are handled correctly (bcrypt limit)
         
         This test prevents CI failures when bcrypt is strict about the 72-byte limit.
-        Different bcrypt versions/environments may handle this differently.
+        CryptContext is configured with bcrypt__truncate_error=False to handle this.
         """
         # Create a password longer than 72 bytes
         long_password = "a" * 100
         
-        # Should not raise an error (would fail in CI without truncation)
+        # Should not raise an error (would fail in CI without proper configuration)
         hashed = hash_password(long_password)
         assert isinstance(hashed, str)
         assert len(hashed) > 0
@@ -106,6 +106,47 @@ class TestPasswordHashing:
         hashed2 = hash_password(long_password2)
         assert verify_password(long_password2, hashed2) is True
         assert verify_password(long_password, hashed2) is False
+    
+    def test_password_exactly_72_bytes(self):
+        """Test password at exactly the 72-byte bcrypt limit"""
+        password_72 = "a" * 72  # Exactly 72 bytes (ASCII)
+        
+        hashed = hash_password(password_72)
+        assert isinstance(hashed, str)
+        assert verify_password(password_72, hashed) is True
+    
+    def test_password_73_bytes(self):
+        """Test password just over the 72-byte limit"""
+        password_73 = "a" * 73  # 73 bytes
+        
+        # Should hash without error (CryptContext truncates)
+        hashed = hash_password(password_73)
+        assert isinstance(hashed, str)
+        
+        # Full password should verify (CryptContext handles truncation)
+        assert verify_password(password_73, hashed) is True
+        
+        # First 72 bytes should also verify (due to truncation)
+        assert verify_password(password_73[:72], hashed) is True
+    
+    def test_password_with_multibyte_utf8(self):
+        """Test password with multi-byte UTF-8 characters (e.g., emoji, accented chars)
+        
+        This ensures proper handling of UTF-8 byte boundaries when truncating.
+        """
+        # Password with emoji (4 bytes each in UTF-8)
+        password_emoji = "🔒" * 20  # 80 bytes (20 * 4)
+        
+        hashed = hash_password(password_emoji)
+        assert isinstance(hashed, str)
+        assert verify_password(password_emoji, hashed) is True
+        
+        # Password with accented characters (2 bytes each)
+        password_accents = "café" * 20  # ~100 bytes
+        
+        hashed2 = hash_password(password_accents)
+        assert isinstance(hashed2, str)
+        assert verify_password(password_accents, hashed2) is True
 
 
 class TestJWTTokens:

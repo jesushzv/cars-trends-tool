@@ -22,7 +22,15 @@ from database import SessionLocal
 from models import User
 
 # Password hashing configuration
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configure bcrypt to handle passwords > 72 bytes gracefully
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    # Bcrypt-specific configuration for cross-environment consistency
+    bcrypt__ident="2b",                    # Use 2b variant (most compatible)
+    bcrypt__truncate_error=False,          # Don't error on long passwords, truncate silently
+    bcrypt__rounds=12,                     # Explicit rounds for consistency
+)
 
 # JWT configuration (can be overridden with environment variables)
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
@@ -41,14 +49,10 @@ def hash_password(password: str) -> str:
         Hashed password string
     
     Note:
-        Bcrypt has a 72-byte password limit. We truncate to ensure compatibility
-        across different bcrypt versions and environments.
+        CryptContext is configured with bcrypt__truncate_error=False,
+        which automatically handles passwords > 72 bytes by truncating them.
+        This ensures consistent behavior across all environments (macOS, Linux, CI).
     """
-    # Bcrypt limitation: max 72 bytes. Truncate bytes, not characters, for safety
-    # Convert to bytes, truncate at 72 bytes, then back to string
-    password_bytes = password.encode('utf-8')[:72]
-    password = password_bytes.decode('utf-8', errors='ignore')
-    
     return pwd_context.hash(password)
 
 
@@ -64,12 +68,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         True if password matches, False otherwise
     
     Note:
-        Applies same 72-byte truncation as hash_password for consistency
+        CryptContext automatically handles password truncation consistently
+        with how it was hashed (bcrypt__truncate_error=False).
     """
-    # Apply same byte truncation as hash_password for consistency
-    password_bytes = plain_password.encode('utf-8')[:72]
-    plain_password = password_bytes.decode('utf-8', errors='ignore')
-    
     return pwd_context.verify(plain_password, hashed_password)
 
 

@@ -63,10 +63,11 @@ def test_scraper_finds_real_data(self):
 Before pushing code, verify:
 
 ### Local Testing
-- [ ] All tests pass: `pytest`
+- [ ] All tests pass: `pytest` or `make test`
 - [ ] Coverage meets target: `pytest --cov=. --cov-report=term-missing`
 - [ ] No network-dependent tests in main suite
 - [ ] No environment-specific assumptions (file paths, passwords, etc.)
+- [ ] **RECOMMENDED:** Test in Docker: `make test-ci` (matches CI environment)
 
 ### Code Review
 - [ ] Check for external API calls without mocks
@@ -158,13 +159,44 @@ Before pushing code, verify:
 
 ---
 
+## 🐳 Docker Testing (CI Environment Parity)
+
+**Why Docker Testing Matters:**
+- Catches environment-specific issues before CI
+- Matches exact CI environment (Python 3.13.7, Linux)
+- Prevents false negatives (local pass, CI fail)
+
+**Quick Start:**
+```bash
+# Test in Docker (matches CI environment)
+make test-ci
+
+# Debug in Docker container
+make test-ci-debug
+```
+
+**What Docker Testing Catches:**
+- Library behavior differences (macOS vs Linux)
+- Binary wheel differences
+- Python version differences
+- Package configuration issues
+
+**When to Use:**
+- Before pushing critical changes
+- When fixing CI failures
+- When adding environment-dependent code
+- Before releases
+
 ## 🛠️ Debugging CI Failures
 
 ### Step 1: Reproduce Locally
 ```bash
-# Run tests in same conditions as CI
+# Option A: Quick local test (may not catch environment issues)
 cd backend
 python -m pytest --tb=short -v
+
+# Option B: Docker test (matches CI environment) - RECOMMENDED
+make test-ci
 
 # Check for environment differences
 python -c "import bcrypt; print(bcrypt.__version__)"
