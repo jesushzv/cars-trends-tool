@@ -424,17 +424,13 @@
             <button id="scrapeMercadoLibreBtn">🛒 Scrape Mercado Libre</button>
         </div>
         
-        <!-- Scheduler Controls (Phase 14) -->
+        <!-- Scheduler Status (Phase 19.6: Read-only, auto-scheduled) -->
         <div style="padding: 15px 30px; background: #e0f2fe; border-bottom: 2px solid #0ea5e9;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="margin: 0 0 5px 0; color: #0c4a6e; font-size: 16px;">⏰ Automated Scheduling</h3>
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 5px 0; color: #0c4a6e; font-size: 16px;">⏰ Automated Daily Updates</h3>
                     <p style="margin: 0; font-size: 12px; color: #075985;" id="schedulerStatus">Checking status...</p>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button id="schedulerStartBtn" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">▶️ Start Scheduler</button>
-                    <button id="schedulerStopBtn" style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">⏸️ Stop Scheduler</button>
-                    <button id="schedulerRefreshBtn" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">🔄 Refresh Status</button>
+                    <p style="margin: 5px 0 0 0; font-size: 11px; color: #64748b;">Scraping runs automatically every day at 2-4 AM (Tijuana time)</p>
                 </div>
             </div>
         </div>
@@ -561,10 +557,8 @@
             document.getElementById('scrapeBtn').addEventListener('click', () => triggerScrape('craigslist'));
             document.getElementById('scrapeMercadoLibreBtn').addEventListener('click', () => triggerScrape('mercadolibre'));
             
-            // Scheduler controls (Phase 14)
-            document.getElementById('schedulerStartBtn').addEventListener('click', startScheduler);
-            document.getElementById('schedulerStopBtn').addEventListener('click', stopScheduler);
-            document.getElementById('schedulerRefreshBtn').addEventListener('click', loadSchedulerStatus);
+            // Scheduler status auto-refresh (Phase 19.6: read-only)
+            // Status loads automatically, no manual controls needed
         }
         
         async function loadListings() {
@@ -880,65 +874,21 @@
             }
         }
         
-        async function startScheduler() {
-            try {
-                const button = document.getElementById('schedulerStartBtn');
-                button.disabled = true;
-                
-                const response = await fetch(`${API_BASE_URL}/scheduler/start`, {
-                    method: 'POST'
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    alert(`Scheduler started! ${data.message}`);
-                    await loadSchedulerStatus();
-                } else {
-                    alert('Failed to start scheduler');
-                }
-            } catch (error) {
-                console.error('Error starting scheduler:', error);
-                alert(`Error: ${error.message}`);
-            } finally {
-                document.getElementById('schedulerStartBtn').disabled = false;
-            }
-        }
-        
-        async function stopScheduler() {
-            try {
-                const button = document.getElementById('schedulerStopBtn');
-                button.disabled = true;
-                
-                const response = await fetch(`${API_BASE_URL}/scheduler/stop`, {
-                    method: 'POST'
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    alert(`Scheduler stopped! ${data.message}`);
-                    await loadSchedulerStatus();
-                } else {
-                    alert('Failed to stop scheduler');
-                }
-            } catch (error) {
-                console.error('Error stopping scheduler:', error);
-                alert(`Error: ${error.message}`);
-            } finally {
-                document.getElementById('schedulerStopBtn').disabled = false;
-            }
-        }
-        
         function displaySchedulerStatus(data) {
             const statusEl = document.getElementById('schedulerStatus');
             
             if (data.running) {
+                // Find next scraping job
+                const nextJob = data.jobs.find(j => j.id.includes('scrape')) || data.jobs[0];
+                const nextRunTime = nextJob && nextJob.next_run ? new Date(nextJob.next_run).toLocaleString() : 'Pending';
+                
                 statusEl.innerHTML = `
-                    <span style="color: #10b981; font-weight: 600;">● Running</span> - 
-                    ${data.jobs.length} scheduled jobs
-                    ${data.jobs.length > 0 ? `<br><span style="font-size: 11px;">Next: ${data.jobs[0].name} at ${new Date(data.jobs[0].next_run).toLocaleTimeString()}</span>` : ''}
+                    <span style="color: #10b981; font-weight: 600;">● Active</span> - 
+                    Scheduler running with ${data.jobs.length} automated jobs
+                    ${nextJob ? `<br><span style="font-size: 11px; color: #475569;">Next run: ${nextJob.name} at ${nextRunTime}</span>` : ''}
                 `;
             } else {
-                statusEl.innerHTML = `<span style="color: #ef4444; font-weight: 600;">● Stopped</span> - Automated scraping is not running`;
+                statusEl.innerHTML = `<span style="color: #ef4444; font-weight: 600;">● Inactive</span> - Scheduler not running (check backend logs)`;
             }
         }
         

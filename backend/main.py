@@ -7,6 +7,7 @@ Phase 3: Frontend display
 Phase 6: Mercado Libre scraper
 Phase 8: Basic Analytics
 Phase 16: Authentication
+Phase 19.6: Automatic scheduling & data seeding
 """
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,6 +21,11 @@ from services.analytics_service import (
     get_top_cars, get_top_makes, get_market_summary,
     get_price_distribution, get_price_by_year, compare_platforms
 )
+from seed_data import seed_initial_data
+from services.scheduler_service import initialize_scheduler
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Cars Trends API",
@@ -36,11 +42,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create tables on startup
+# Startup event - Phase 19.6: Seed data and auto-start scheduler
 @app.on_event("startup")
 def startup_event():
-    """Initialize database tables on app startup"""
+    """
+    Initialize application on startup
+    
+    Phase 19.6: Enhanced startup process
+    1. Create database tables
+    2. Seed initial data if database is empty
+    3. Initialize and auto-start scheduler
+    """
+    logger.info("=" * 70)
+    logger.info("APPLICATION STARTUP")
+    logger.info("=" * 70)
+    
+    # Step 1: Create tables
+    logger.info("Step 1: Creating database tables...")
     create_tables()
+    logger.info("✅ Database tables ready")
+    
+    # Step 2: Seed initial data if database is empty
+    logger.info("\nStep 2: Checking for initial data...")
+    try:
+        seed_result = seed_initial_data()
+        if seed_result["seeded"]:
+            logger.info(f"✅ Database seeded with {seed_result['total_scraped']} listings")
+        else:
+            logger.info("✅ Database already has data")
+    except Exception as e:
+        logger.error(f"⚠️  Data seeding failed: {e}")
+        logger.error("   Application will continue but database may be empty")
+    
+    # Step 3: Initialize and auto-start scheduler
+    logger.info("\nStep 3: Initializing scheduler...")
+    try:
+        initialize_scheduler(auto_start=True)
+        logger.info("✅ Scheduler initialized and started")
+    except Exception as e:
+        logger.error(f"⚠️  Scheduler initialization failed: {e}")
+        logger.error("   Application will run but scheduled jobs won't execute")
+    
+    logger.info("\n" + "=" * 70)
+    logger.info("✅ APPLICATION READY")
+    logger.info("=" * 70)
 
 
 @app.get("/")

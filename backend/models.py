@@ -16,6 +16,7 @@ class Listing(Base):
     Car listing model - stores scraped listings from various platforms
     Phase 4: Added make, model, year, mileage fields
     Phase 10: Added engagement metrics (views, likes, comments)
+    Phase 19.6: Added lifecycle tracking (first_seen, last_seen)
     """
     __tablename__ = "listings"
     
@@ -41,8 +42,12 @@ class Listing(Base):
     likes = Column(Integer, nullable=True)  # Number of likes/favorites
     comments = Column(Integer, nullable=True)  # Number of comments
     
+    # Lifecycle tracking (Phase 19.6)
+    first_seen = Column(DateTime, nullable=True, index=True)  # When we first discovered this listing
+    last_seen = Column(DateTime, nullable=True, index=True)  # When we last saw it active
+    
     # Metadata
-    scraped_at = Column(DateTime, default=datetime.utcnow, nullable=False)  # When we scraped it
+    scraped_at = Column(DateTime, default=datetime.utcnow, nullable=False)  # When we scraped it (deprecated, use last_seen)
     
     def __repr__(self):
         car_info = f"{self.year} {self.make} {self.model}" if self.year and self.make else self.title[:30]

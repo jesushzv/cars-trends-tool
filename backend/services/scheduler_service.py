@@ -71,8 +71,8 @@ def _scrape_facebook_job():
         saved, duplicates = save_listings(listings)
         return f"Facebook: {saved} saved, {duplicates} duplicates"
     except Exception as e:
-        # Facebook may fail if cookies expired
-        logger.warning(f"Facebook scraping failed (cookies may need refresh): {e}")
+        # Facebook may fail if cookies expired - ALERT as per Phase 19.6
+        _facebook_failure_alert(str(e))
         return f"Facebook: Failed - {str(e)}"
 
 
@@ -84,20 +84,52 @@ def _create_snapshot_job():
     return f"Snapshot: {result['snapshots_created']} created, {result['snapshots_updated']} updated"
 
 
-def initialize_scheduler() -> BackgroundScheduler:
+def _cleanup_job():
+    """Job to cleanup old data"""
+    from services.cleanup_service import cleanup_all
+    
+    result = cleanup_all()
+    return f"Cleanup: {result['total_deleted']} items deleted (listings: {result['listings']['deleted_count']}, snapshots: {result['snapshots']['deleted_count']})"
+
+
+def _facebook_failure_alert(error_msg: str):
+    """Alert about Facebook scraping failure (Phase 19.6 requirement)"""
+    logger.error("=" * 70)
+    logger.error("⚠️  ALERT: FACEBOOK SCRAPING FAILED")
+    logger.error("=" * 70)
+    logger.error(f"Error: {error_msg}")
+    logger.error("Possible causes:")
+    logger.error("  1. Facebook cookies expired")
+    logger.error("  2. Facebook changed their HTML structure")
+    logger.error("  3. IP temporarily blocked")
+    logger.error("")
+    logger.error("Action required:")
+    logger.error("  - Check backend/HOW_TO_GET_FB_COOKIES.md")
+    logger.error("  - Export fresh cookies if needed")
+    logger.error("  - Replace backend/fb_cookies.json")
+    logger.error("=" * 70)
+
+
+def initialize_scheduler(auto_start: bool = True) -> BackgroundScheduler:
     """
     Initialize the scheduler with all jobs
+    
+    Phase 19.6: Now includes cleanup job and auto-starts by default
     
     Jobs scheduled:
     - Craigslist scraping: Daily at 2:00 AM
     - Mercado Libre scraping: Daily at 3:00 AM
     - Facebook scraping: Daily at 4:00 AM
     - Daily snapshot: Daily at 5:00 AM (after all scraping)
+    - Data cleanup: Daily at 6:00 AM (after snapshot)
+    
+    Args:
+        auto_start: If True, automatically start scheduler after initialization
     
     Returns:
         Configured BackgroundScheduler instance
     """
-    global _scheduler
+    global _scheduler, _scheduler_started
     
     if _scheduler is not None:
         logger.warning("Scheduler already initialized")
@@ -146,8 +178,25 @@ def initialize_scheduler() -> BackgroundScheduler:
     )
     logger.info("Added job: Create Daily Snapshot (daily at 5:00 AM)")
     
+    # Add cleanup job - Daily at 6:00 AM (Phase 19.6: after snapshot)
+    scheduler.add_job(
+        _job_wrapper(_cleanup_job, "Cleanup Old Data"),
+        trigger=CronTrigger(hour=6, minute=0),
+        id='cleanup_data',
+        name='Cleanup Old Data Daily',
+        replace_existing=True
+    )
+    logger.info("Added job: Cleanup Old Data (daily at 6:00 AM)")
+    
     _scheduler = scheduler
-    logger.info("Scheduler initialized with 4 jobs")
+    logger.info("Scheduler initialized with 5 jobs")
+    
+    # Auto-start if requested (Phase 19.6: default behavior)
+    if auto_start:
+        scheduler.start()
+        _scheduler_started = True
+        logger.info("✅ Scheduler auto-started")
+    
     return scheduler
 
 

@@ -1,11 +1,13 @@
 """
 Database service - functions for saving and querying listings
 Phase 2: Simple CRUD operations
+Phase 19.6: Updated to use lifecycle tracking
 """
 from sqlalchemy.orm import Session
 from models import Listing
 from database import SessionLocal
 from typing import List, Optional
+from services.listing_lifecycle_service import upsert_listing
 
 
 def save_listing(platform: str, title: str, url: str, price: Optional[float] = None, 
@@ -17,6 +19,11 @@ def save_listing(platform: str, title: str, url: str, price: Optional[float] = N
     Save a single listing to the database
     Phase 4: Enhanced with car fields
     Phase 10: Enhanced with engagement metrics
+    Phase 19.6: Now uses lifecycle tracking (upsert instead of skip)
+    
+    Uses upsert logic:
+    - If URL exists: Update last_seen, price, engagement metrics
+    - If URL new: Create with first_seen = last_seen = now
     
     Args:
         platform: Platform name ('craigslist', 'mercadolibre', 'facebook')
@@ -32,35 +39,25 @@ def save_listing(platform: str, title: str, url: str, price: Optional[float] = N
         comments: Optional number of comments
         
     Returns:
-        The saved Listing object with ID assigned, or None if duplicate URL
+        The saved/updated Listing object with ID assigned
     """
-    db = SessionLocal()
-    try:
-        # Check if URL already exists
-        existing = db.query(Listing).filter(Listing.url == url).first()
-        if existing:
-            print(f"  [INFO] Duplicate URL skipped: {url}")
-            return None
-        
-        listing = Listing(
-            platform=platform,
-            title=title,
-            url=url,
-            price=price,
-            make=make,
-            model=model,
-            year=year,
-            mileage=mileage,
-            views=views,
-            likes=likes,
-            comments=comments
-        )
-        db.add(listing)
-        db.commit()
-        db.refresh(listing)
-        return listing
-    finally:
-        db.close()
+    # Prepare listing data
+    listing_data = {
+        'platform': platform,
+        'title': title,
+        'url': url,
+        'price': price,
+        'make': make,
+        'model': model,
+        'year': year,
+        'mileage': mileage,
+        'views': views,
+        'likes': likes,
+        'comments': comments
+    }
+    
+    # Use upsert to either create or update listing
+    return upsert_listing(listing_data)
 
 
 def get_all_listings(limit: int = 100) -> List[Listing]:

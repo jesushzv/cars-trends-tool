@@ -17,15 +17,20 @@ An automated web application for tracking car market trends in Tijuana, Mexico b
 - ✅ **Market Intelligence**: Top cars, market share analysis, trending vehicles
 - ✅ **Real-time Dashboard**: Web-based interface with interactive charts
 - ✅ **Authentication**: JWT-based user authentication system
-- ✅ **Automated Scheduling**: Daily scraping and data snapshots
+- ✅ **Automated Scheduling**: Daily scraping, snapshots, and data cleanup
+- ✅ **Lifecycle Tracking**: Historical data with price change monitoring
+- ✅ **Data Retention**: Automatic cleanup (90-day retention for listings, 180-day for snapshots)
 - ✅ **CI/CD Pipeline**: Automated testing, building, and deployment
 - ✅ **Docker Deployment**: All services containerized and production-ready
 - ✅ **Test Coverage**: 72% coverage with comprehensive E2E tests
 
-**Status**: Production-ready with automated CI/CD pipeline ✅
+**Status**: Production-ready with fully automated operations ✅
 
 ## Features
 
+- **Fully Automated Operation**: Application auto-starts scheduler and seeds initial data
+- **Listing Lifecycle Tracking**: Monitors listings over time, tracks price changes
+- **Data Retention Policies**: Automatic cleanup keeps database size managed (90-day retention)
 - **Automated Data Collection**: Daily scraping from Facebook Marketplace, Craigslist, and Mercado Libre
 - **Price Trend Analysis**: Historical pricing data with trend visualization
 - **Market Intelligence**: Top cars, market share analysis, platform comparison
@@ -33,7 +38,7 @@ An automated web application for tracking car market trends in Tijuana, Mexico b
 - **Real-time Dashboard**: Web-based interface with interactive charts
 - **Historical Tracking**: Daily snapshots for trend analysis over time
 - **User Authentication**: Secure JWT-based authentication system
-- **Automated Scheduling**: Background jobs for daily scraping and analysis
+- **Automated Scheduling**: Background jobs for daily scraping, snapshots, and cleanup
 - **CI/CD Pipeline**: Automated testing, security scanning, and Docker image building
 
 ## Quick Start

@@ -36,7 +36,7 @@ ensure_newline_before_comments = true
 skip_glob = ["**/venv/**", "**/env/**", "**/.venv/**"]
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "8.0"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
@@ -47,6 +47,8 @@ markers = [
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
 ]
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["."]
