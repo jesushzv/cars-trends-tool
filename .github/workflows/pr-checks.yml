@@ -1,0 +1,203 @@
+# Pull Request Checks Workflow
+# Phase 19: CI/CD Pipeline
+#
+# Runs on every pull request to main or develop branches
+# Ensures code quality before merging
+
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/**'
+
+env:
+  PYTHON_VERSION: '3.13'
+
+jobs:
+  # Job 1: Lint Python Code
+  lint-python:
+    name: 🔍 Lint Python
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install linting dependencies
+        run: |
+          cd backend
+          pip install flake8 black isort
+      
+      - name: Run flake8
+        run: |
+          cd backend
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
+      
+      - name: Check black formatting
+        run: |
+          cd backend
+          black --check --diff .
+      
+      - name: Check import sorting
+        run: |
+          cd backend
+          isort --check-only --diff .
+
+  # Job 2: Run Tests
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+      
+      - name: Install Playwright browsers
+        run: |
+          cd backend
+          playwright install chromium
+          playwright install-deps chromium
+      
+      - name: Run tests with coverage
+        env:
+          USE_SQLITE_FALLBACK: true
+        run: |
+          cd backend
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term --cov-report=html
+      
+      - name: Check coverage threshold
+        run: |
+          cd backend
+          coverage report --fail-under=70
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+        if: always()
+      
+      - name: Upload coverage HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/htmlcov/
+        if: always()
+
+  # Job 3: Security Scan
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install security tools
+        run: |
+          pip install bandit safety
+      
+      - name: Run Bandit security scan
+        run: |
+          cd backend
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -ll
+      
+      - name: Check dependencies for vulnerabilities
+        run: |
+          cd backend
+          safety check --json || true
+          safety check
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: backend/bandit-report.json
+        if: always()
+
+  # Job 4: Build Docker Images (no push)
+  build:
+    name: 🐳 Build Docker Images
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          tags: ghcr.io/${{ github.repository }}/backend:pr-${{ github.event.pull_request.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          tags: ghcr.io/${{ github.repository }}/frontend:pr-${{ github.event.pull_request.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Summary Job
+  pr-checks-summary:
+    name: ✅ PR Checks Summary
+    runs-on: ubuntu-latest
+    needs: [lint-python, test, security, build]
+    if: always()
+    
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "Lint: ${{ needs.lint-python.result }}"
+          echo "Test: ${{ needs.test.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          
+          if [ "${{ needs.lint-python.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.security.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ Some checks failed!"
+            exit 1
+          fi
+          
+          echo "✅ All checks passed!"
+

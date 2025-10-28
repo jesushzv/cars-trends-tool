@@ -1,72 +1,97 @@
+# Cars Trends Tool - Docker Compose Configuration
+# Phase 18: Docker Deployment
+#
+# Services:
+# - PostgreSQL database
+# - Backend API (FastAPI)
+# - Frontend web server (Nginx)
+#
+# Usage:
+#   docker-compose up -d        # Start all services
+#   docker-compose down         # Stop all services
+#   docker-compose logs -f      # View logs
+#   docker-compose ps           # Check status
+
 version: '3.8'
 
 services:
   # PostgreSQL Database
-  db:
-    image: postgres:15
+  postgres:
+    image: postgres:16-alpine
+    container_name: carstrends-db
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-car_trends}
-      POSTGRES_USER: ${POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-carstrends}
+      POSTGRES_USER: ${POSTGRES_USER:-carstrends}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-carstrends}
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-carstrends}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - carstrends-network
 
-  # FastAPI Backend
+  # Backend API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: carstrends-backend
+    restart: unless-stopped
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-car_trends}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - ALGORITHM=${ALGORITHM:-HS256}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
-      - SCRAPING_DELAY_MIN=${SCRAPING_DELAY_MIN:-1}
-      - SCRAPING_DELAY_MAX=${SCRAPING_DELAY_MAX:-3}
-      - MAX_RETRIES=${MAX_RETRIES:-3}
-      - USER_AGENT=${USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_FORMAT=${LOG_FORMAT:-json}
-    ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
+      DATABASE_URL: postgresql://${POSTGRES_USER:-carstrends}:${POSTGRES_PASSWORD:-carstrends}@postgres:5432/${POSTGRES_DB:-carstrends}
+      PYTHONUNBUFFERED: 1
     volumes:
-      - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - ./backend/logs:/app/logs
+      - ./backend/fb_cookies.json:/app/fb_cookies.json:ro
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - carstrends-network
 
-  # React Frontend
+  # Frontend Web Server
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
-      - REACT_APP_ENVIRONMENT=${REACT_APP_ENVIRONMENT:-development}
+    container_name: carstrends-frontend
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm start
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - carstrends-network
 
-  # Redis for caching and session management
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
+# Named volumes for data persistence
 volumes:
   postgres_data:
-  redis_data:
+    name: carstrends-postgres-data
+    driver: local
+
+# Network for service communication
+networks:
+  carstrends-network:
+    name: carstrends-network
+    driver: bridge

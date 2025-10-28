@@ -1,0 +1,175 @@
+# Nightly Tests Workflow
+# Phase 19: CI/CD Pipeline
+#
+# Runs comprehensive tests daily at 2 AM UTC
+# Helps catch issues early and test with latest dependencies
+
+name: Nightly Tests
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM UTC every day
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  PYTHON_VERSION: '3.13'
+
+jobs:
+  # Job 1: Full Test Suite
+  comprehensive-tests:
+    name: 🌙 Comprehensive Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio pytest-timeout
+      
+      - name: Install Playwright
+        run: |
+          cd backend
+          playwright install chromium
+          playwright install-deps chromium
+      
+      - name: Run all tests with timeout
+        env:
+          USE_SQLITE_FALLBACK: true
+        run: |
+          cd backend
+          pytest tests/ -v --timeout=300 --cov=. --cov-report=xml --cov-report=term
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-test-results
+          path: backend/coverage.xml
+        if: always()
+
+  # Job 2: Test with Latest Dependencies
+  test-latest-deps:
+    name: 🔄 Test Latest Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install latest dependencies
+        run: |
+          cd backend
+          # Install without pinned versions
+          pip install $(cat requirements.txt | cut -d'=' -f1)
+          pip install pytest pytest-cov
+      
+      - name: Run tests
+        env:
+          USE_SQLITE_FALLBACK: true
+        run: |
+          cd backend
+          pytest tests/ -v --maxfail=5
+        continue-on-error: true
+      
+      - name: Report compatibility
+        run: |
+          echo "## Dependency Compatibility Check" >> $GITHUB_STEP_SUMMARY
+          echo "Tested with latest available versions" >> $GITHUB_STEP_SUMMARY
+
+  # Job 3: Performance Benchmarks
+  performance:
+    name: 📊 Performance Benchmarks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+      
+      - name: Run API performance tests
+        env:
+          USE_SQLITE_FALLBACK: true
+        run: |
+          cd backend
+          # Simple performance check - API response time
+          python -c "
+          import time
+          from main import app
+          from fastapi.testclient import TestClient
+          
+          client = TestClient(app)
+          times = []
+          
+          for i in range(10):
+              start = time.time()
+              response = client.get('/')
+              times.append(time.time() - start)
+          
+          avg_time = sum(times) / len(times)
+          print(f'Average response time: {avg_time:.3f}s')
+          
+          if avg_time > 1.0:
+              print('⚠️ Warning: Response time > 1s')
+          else:
+              print('✅ Performance OK')
+          "
+      
+      - name: Performance summary
+        run: |
+          echo "## 📊 Performance Results" >> $GITHUB_STEP_SUMMARY
+          echo "API performance tests completed" >> $GITHUB_STEP_SUMMARY
+
+  # Job 4: Notification on Failure
+  notify-on-failure:
+    name: 📢 Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [comprehensive-tests, test-latest-deps, performance]
+    if: failure()
+    
+    steps:
+      - name: Create Issue on Failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Nightly Tests Failed',
+              body: `## Nightly Test Failure
+              
+              **Date**: ${new Date().toISOString()}
+              **Workflow Run**: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+              
+              One or more nightly tests have failed. Please investigate.
+              
+              **Failed Jobs**:
+              - Comprehensive Tests: ${{ needs.comprehensive-tests.result }}
+              - Latest Dependencies: ${{ needs.test-latest-deps.result }}
+              - Performance: ${{ needs.performance.result }}
+              `,
+              labels: ['bug', 'ci', 'automated']
+            })
+

@@ -1,0 +1,35 @@
+# Coverage Configuration
+# Phase 19: CI/CD Pipeline
+
+[run]
+source = .
+omit =
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */venv/*
+    */env/*
+    */.venv/*
+    */migrations/*
+    */conftest.py
+    */migrate_*.py
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+fail_under = 70
+
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if False:
+    if TYPE_CHECKING:
+
+[html]
+directory = htmlcov
+

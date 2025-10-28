@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Misc
+.DS_Store
+*.bak
+tmp/
+temp/
+
+# Migration scripts (run manually)
+migrate_*.py
+
+# Facebook cookies (sensitive)
+fb_cookies.json
+HOW_TO_GET_FB_COOKIES.md
+fb_marketplace_debug.png
+
+# Test files
+test_*.py
+tests/
+conftest.py
+

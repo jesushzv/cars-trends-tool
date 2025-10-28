@@ -1,0 +1,23 @@
+# Node modules (if we add npm later)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+
+# Misc
+.DS_Store
+*.bak
+

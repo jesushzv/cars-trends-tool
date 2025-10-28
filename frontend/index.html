@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cars Trends Tool - Tijuana Market</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .auth-section {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .auth-section button {
+            padding: 8px 16px;
+            border: 1px solid white;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .auth-section button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .auth-section .user-info {
+            color: white;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-modal.active {
+            display: flex;
+        }
+        
+        .login-form {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .login-form h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .login-form .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .login-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .login-form .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .login-form button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .login-form button.primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .login-form button.primary:hover {
+            background: #5568d3;
+        }
+        
+        .login-form button.secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .login-form button.secondary:hover {
+            background: #5a6268;
+        }
+        
+        .login-form .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .login-form .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .login-form .tab {
+            flex: 1;
+            padding: 10px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .login-form .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .controls label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .controls select,
+        .controls button {
+            padding: 10px 20px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .controls select {
+            background: white;
+        }
+        
+        .controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .controls button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .controls button:active {
+            transform: translateY(0);
+        }
+        
+        .stats {
+            padding: 20px 30px;
+            display: flex;
+            gap: 20px;
+            background: #e9ecef;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card p {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .platform-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .platform-craigslist {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .platform-mercadolibre {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .platform-facebook {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .price {
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .link-btn {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .link-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            margin: 20px 30px;
+            border-radius: 6px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            color: #6c757d;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-form">
+            <h2 id="modalTitle">Login</h2>
+            <div class="tabs">
+                <button class="tab active" id="loginTab">Login</button>
+                <button class="tab" id="registerTab">Register</button>
+            </div>
+            <div id="loginFormContent">
+                <div class="form-group">
+                    <label for="loginUsername">Username or Email</label>
+                    <input type="text" id="loginUsername" placeholder="Enter username or email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password">
+                </div>
+            </div>
+            <div id="registerFormContent" style="display: none;">
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter email">
+                </div>
+                <div class="form-group">
+                    <label for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" placeholder="Choose username">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" placeholder="Choose password">
+                </div>
+            </div>
+            <div class="error" id="authError"></div>
+            <div class="button-group">
+                <button class="primary" id="authSubmitBtn">Login</button>
+                <button class="secondary" id="authCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🚗 Cars Trends Tool</h1>
+            <p>Real-time car market insights from Tijuana, Mexico</p>
+            <div class="auth-section">
+                <span class="user-info" id="userInfo" style="display: none;"></span>
+                <button id="loginBtn">Login</button>
+                <button id="logoutBtn" style="display: none;">Logout</button>
+            </div>
+        </header>
+        
+        <div class="controls">
+            <label for="platformFilter">Filter by Platform:</label>
+            <select id="platformFilter">
+                <option value="">All Platforms</option>
+                <option value="craigslist">Craigslist</option>
+                <option value="mercadolibre">Mercado Libre</option>
+                <option value="facebook">Facebook Marketplace</option>
+            </select>
+            
+            <button id="refreshBtn">🔄 Refresh Listings</button>
+            <button id="scrapeBtn">📥 Scrape Craigslist</button>
+            <button id="scrapeMercadoLibreBtn">🛒 Scrape Mercado Libre</button>
+        </div>
+        
+        <!-- Scheduler Controls (Phase 14) -->
+        <div style="padding: 15px 30px; background: #e0f2fe; border-bottom: 2px solid #0ea5e9;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; color: #0c4a6e; font-size: 16px;">⏰ Automated Scheduling</h3>
+                    <p style="margin: 0; font-size: 12px; color: #075985;" id="schedulerStatus">Checking status...</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="schedulerStartBtn" style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">▶️ Start Scheduler</button>
+                    <button id="schedulerStopBtn" style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">⏸️ Stop Scheduler</button>
+                    <button id="schedulerRefreshBtn" style="padding: 8px 16px; background: #6366f1; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 13px;">🔄 Refresh Status</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Listings</h3>
+                <p id="totalCount">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Displayed</h3>
+                <p id="displayedCount">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Average Price</h3>
+                <p id="avgPrice">-</p>
+            </div>
+        </div>
+        
+        <div id="errorContainer"></div>
+        
+        <!-- Analytics Section -->
+        <div class="analytics-section" style="padding: 20px 30px; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+            <h2 style="margin-bottom: 15px; color: #495057;">📊 Market Analytics</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 10px; color: #667eea; font-size: 18px;">🏆 Top Cars</h3>
+                    <div id="topCarsList" style="font-size: 14px;">Loading...</div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 10px; color: #667eea; font-size: 18px;">🚗 Top Brands</h3>
+                    <div id="topMakesList" style="font-size: 14px;">Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Price Analytics Section -->
+        <div class="price-analytics-section" style="padding: 20px 30px; background: #fff; border-bottom: 1px solid #dee2e6;">
+            <h2 style="margin-bottom: 15px; color: #495057;">💰 Price Analytics</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 10px; color: #28a745; font-size: 18px;">📊 Price Distribution</h3>
+                    <div id="priceDistribution" style="font-size: 14px;">Loading...</div>
+                </div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 10px; color: #28a745; font-size: 18px;">📅 Price by Year</h3>
+                    <div id="priceByYear" style="font-size: 14px;">Loading...</div>
+                </div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 10px; color: #28a745; font-size: 18px;">⚖️ Platform Comparison</h3>
+                    <div id="platformComparison" style="font-size: 14px;">Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Trends Section (Phase 13) -->
+        <div class="trends-section" style="padding: 20px 30px; background: #fff3cd; border-bottom: 1px solid #dee2e6;">
+            <h2 style="margin-bottom: 15px; color: #495057;">📈 Price Trends</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <!-- Trending Cars -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 10px; color: #f59e0b; font-size: 18px;">🔥 Trending This Week</h3>
+                    <div id="trendingCars" style="font-size: 14px;">Loading...</div>
+                </div>
+                
+                <!-- Market Overview -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 10px; color: #10b981; font-size: 18px;">📊 Market Overview</h3>
+                    <div id="marketOverview" style="font-size: 14px;">Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <div id="loadingMessage" class="loading">
+                Loading listings...
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>No listings found</h3>
+                <p>Click "Scrape Craigslist" or "Scrape Mercado Libre" to fetch listings</p>
+            </div>
+            
+            <table id="listingsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Year</th>
+                        <th>Make</th>
+                        <th>Model</th>
+                        <th>Price</th>
+                        <th>Mileage (km)</th>
+                        <th>Scraped</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <tbody id="listingsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // API configuration
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        // State
+        let allListings = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuth();  // Phase 16
+            loadListings();
+            loadAnalytics();
+            loadPriceAnalytics();
+            loadTrends();  // Phase 13
+            loadSchedulerStatus();  // Phase 14
+            setupEventListeners();
+        });
+        
+        function setupEventListeners() {
+            document.getElementById('refreshBtn').addEventListener('click', loadListings);
+            document.getElementById('platformFilter').addEventListener('change', filterListings);
+            document.getElementById('scrapeBtn').addEventListener('click', () => triggerScrape('craigslist'));
+            document.getElementById('scrapeMercadoLibreBtn').addEventListener('click', () => triggerScrape('mercadolibre'));
+            
+            // Scheduler controls (Phase 14)
+            document.getElementById('schedulerStartBtn').addEventListener('click', startScheduler);
+            document.getElementById('schedulerStopBtn').addEventListener('click', stopScheduler);
+            document.getElementById('schedulerRefreshBtn').addEventListener('click', loadSchedulerStatus);
+        }
+        
+        async function loadListings() {
+            showLoading(true);
+            clearError();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/listings?limit=100`);
+                if (!response.ok) throw new Error('Failed to fetch listings');
+                
+                const data = await response.json();
+                allListings = data.listings;
+                
+                displayListings(allListings);
+                updateStats(allListings, data.total_in_db);
+                
+            } catch (error) {
+                showError(`Error loading listings: ${error.message}`);
+                showEmptyState();
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        async function loadAnalytics() {
+            try {
+                // Load top cars
+                const topCarsResponse = await fetch(`${API_BASE_URL}/analytics/top-cars?limit=5`);
+                if (topCarsResponse.ok) {
+                    const topCarsData = await topCarsResponse.json();
+                    displayTopCars(topCarsData.cars);
+                }
+                
+                // Load top makes
+                const topMakesResponse = await fetch(`${API_BASE_URL}/analytics/top-makes?limit=5`);
+                if (topMakesResponse.ok) {
+                    const topMakesData = await topMakesResponse.json();
+                    displayTopMakes(topMakesData.makes);
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.getElementById('topCarsList').innerHTML = 'Error loading analytics';
+                document.getElementById('topMakesList').innerHTML = 'Error loading analytics';
+            }
+        }
+        
+        async function loadPriceAnalytics() {
+            try {
+                // Load price distribution
+                const distributionResponse = await fetch(`${API_BASE_URL}/analytics/prices/distribution`);
+                if (distributionResponse.ok) {
+                    const distributionData = await distributionResponse.json();
+                    displayPriceDistribution(distributionData);
+                }
+                
+                // Load price by year
+                const byYearResponse = await fetch(`${API_BASE_URL}/analytics/prices/by-year`);
+                if (byYearResponse.ok) {
+                    const byYearData = await byYearResponse.json();
+                    displayPriceByYear(byYearData);
+                }
+                
+                // Load platform comparison
+                const comparisonResponse = await fetch(`${API_BASE_URL}/analytics/prices/compare-platforms`);
+                if (comparisonResponse.ok) {
+                    const comparisonData = await comparisonResponse.json();
+                    displayPlatformComparison(comparisonData);
+                }
+            } catch (error) {
+                console.error('Error loading price analytics:', error);
+                document.getElementById('priceDistribution').innerHTML = 'Error loading data';
+                document.getElementById('priceByYear').innerHTML = 'Error loading data';
+                document.getElementById('platformComparison').innerHTML = 'Error loading data';
+            }
+        }
+        
+        async function loadTrends() {
+            try {
+                // Load trending cars (Phase 13)
+                const trendingResponse = await fetch(`${API_BASE_URL}/trends/trending?days=7&limit=5`);
+                if (trendingResponse.ok) {
+                    const trendingData = await trendingResponse.json();
+                    displayTrendingCars(trendingData);
+                }
+                
+                // Load market overview
+                const overviewResponse = await fetch(`${API_BASE_URL}/trends/overview?days=30`);
+                if (overviewResponse.ok) {
+                    const overviewData = await overviewResponse.json();
+                    displayMarketOverview(overviewData);
+                }
+            } catch (error) {
+                console.error('Error loading trends:', error);
+                document.getElementById('trendingCars').innerHTML = 'Error loading trends';
+                document.getElementById('marketOverview').innerHTML = 'Error loading overview';
+            }
+        }
+        
+        
+        function displayTopCars(cars) {
+            const container = document.getElementById('topCarsList');
+            if (!cars || cars.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d;">No data available</p>';
+                return;
+            }
+            
+            container.innerHTML = '<ol style="margin: 0; padding-left: 20px;">' + 
+                cars.map(car => `
+                    <li style="margin-bottom: 8px;">
+                        <strong>${car.make} ${car.model}</strong><br>
+                        <span style="color: #6c757d; font-size: 12px;">
+                            ${car.count} listing${car.count > 1 ? 's' : ''}
+                            ${car.avg_price ? ` • Avg: ${formatPrice(car.avg_price)}` : ''}
+                        </span>
+                    </li>
+                `).join('') +
+            '</ol>';
+        }
+        
+        function displayTopMakes(makes) {
+            const container = document.getElementById('topMakesList');
+            if (!makes || makes.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d;">No data available</p>';
+                return;
+            }
+            
+            container.innerHTML = '<ol style="margin: 0; padding-left: 20px;">' + 
+                makes.map(make => `
+                    <li style="margin-bottom: 8px;">
+                        <strong>${make.make}</strong><br>
+                        <span style="color: #6c757d; font-size: 12px;">
+                            ${make.count} listing${make.count > 1 ? 's' : ''} • ${make.models_count} model${make.models_count > 1 ? 's' : ''}
+                            ${make.avg_price ? ` • Avg: ${formatPrice(make.avg_price)}` : ''}
+                        </span>
+                    </li>
+                `).join('') +
+            '</ol>';
+        }
+        
+        function displayPriceDistribution(data) {
+            const container = document.getElementById('priceDistribution');
+            if (!data || !data.ranges || data.ranges.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d;">No data available</p>';
+                return;
+            }
+            
+            const maxCount = Math.max(...data.ranges.map(r => r.count));
+            
+            container.innerHTML = data.ranges.map(range => {
+                const percentage = maxCount > 0 ? (range.count / maxCount) * 100 : 0;
+                return `
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-weight: 600; font-size: 13px;">${range.range}</span>
+                            <span style="color: #6c757d; font-size: 13px;">${range.count} cars</span>
+                        </div>
+                        <div style="background: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: linear-gradient(90deg, #28a745, #20c997); height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function displayPriceByYear(data) {
+            const container = document.getElementById('priceByYear');
+            if (!data || !data.data || data.data.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d;">No data available</p>';
+                return;
+            }
+            
+            // Sort by year descending
+            const sortedYears = [...data.data].sort((a, b) => b.year - a.year).slice(0, 10);
+            
+            container.innerHTML = '<div style="font-size: 13px;">' + 
+                sortedYears.map(yearData => `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                        <span style="font-weight: 600;">${yearData.year}</span>
+                        <div style="text-align: right;">
+                            <div style="color: #28a745; font-weight: 600;">${formatPrice(yearData.avg_price)}</div>
+                            <div style="color: #6c757d; font-size: 11px;">${yearData.count} listing${yearData.count > 1 ? 's' : ''}</div>
+                        </div>
+                    </div>
+                `).join('') +
+            '</div>';
+        }
+        
+        function displayPlatformComparison(data) {
+            const container = document.getElementById('platformComparison');
+            if (!data || !data.craigslist || !data.mercadolibre) {
+                container.innerHTML = '<p style="color: #6c757d;">No data available</p>';
+                return;
+            }
+            
+            const cl = data.craigslist;
+            const ml = data.mercadolibre;
+            const priceDiff = data.difference || 0;
+            const priceDiffPct = data.difference_pct || 0;
+            
+            container.innerHTML = `
+                <div style="font-size: 13px;">
+                    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid #e9ecef;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="font-weight: 600; color: #1976d2;">🔵 Craigslist</span>
+                            <span style="font-weight: 600; color: #1976d2;">${formatPrice(cl.avg_price)}</span>
+                        </div>
+                        <div style="color: #6c757d; font-size: 11px;">
+                            ${cl.count} listings • Avg year: ${cl.avg_year || 'N/A'}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid #e9ecef;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="font-weight: 600; color: #f57c00;">🟠 Mercado Libre</span>
+                            <span style="font-weight: 600; color: #f57c00;">${formatPrice(ml.avg_price)}</span>
+                        </div>
+                        <div style="color: #6c757d; font-size: 11px;">
+                            ${ml.count} listings • Avg year: ${ml.avg_year || 'N/A'}
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3cd; padding: 10px; border-radius: 4px; border-left: 3px solid #ffc107;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">Price Difference</div>
+                        <div style="font-size: 12px; color: #856404;">
+                            ${priceDiff > 0 ? 'Mercado Libre' : 'Craigslist'} is 
+                            <strong>${formatPrice(Math.abs(priceDiff))}</strong> 
+                            (${Math.abs(priceDiffPct).toFixed(1)}%) 
+                            ${priceDiff > 0 ? 'higher' : 'lower'} on average
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displayTrendingCars(trending) {
+            const container = document.getElementById('trendingCars');
+            
+            if (!trending || trending.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d; font-size: 13px;">No trending data yet. Create a snapshot first!</p>';
+                return;
+            }
+            
+            container.innerHTML = trending.map(car => {
+                const isUp = car.direction === 'up';
+                const arrow = isUp ? '📈' : '📉';
+                const color = isUp ? '#10b981' : '#ef4444';
+                const sign = isUp ? '+' : '';
+                
+                return `
+                    <div style="padding: 10px 0; border-bottom: 1px solid #f3f4f6;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <strong style="font-size: 13px;">${car.make} ${car.model}</strong>
+                            <span style="color: ${color}; font-weight: 600; font-size: 12px;">${arrow} ${sign}${formatPrice(car.change)}</span>
+                        </div>
+                        <div style="font-size: 11px; color: #6b7280;">
+                            ${formatPrice(car.old_price)} → ${formatPrice(car.new_price)}
+                            <span style="color: ${color}; font-weight: 600; margin-left: 8px;">${sign}${car.change_pct.toFixed(1)}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function displayMarketOverview(overview) {
+            const container = document.getElementById('marketOverview');
+            
+            if (!overview || overview.total_unique_cars === 0) {
+                container.innerHTML = '<p style="color: #6c757d; font-size: 13px;">No market data yet. Create a snapshot first!</p>';
+                return;
+            }
+            
+            const mostListed = overview.most_listed.slice(0, 3);
+            
+            container.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div style="background: #f3f4f6; padding: 8px; border-radius: 4px;">
+                            <div style="font-size: 11px; color: #6b7280;">Unique Cars</div>
+                            <div style="font-size: 18px; font-weight: 600; color: #111827;">${overview.total_unique_cars}</div>
+                        </div>
+                        <div style="background: #f3f4f6; padding: 8px; border-radius: 4px;">
+                            <div style="font-size: 11px; color: #6b7280;">Avg Price</div>
+                            <div style="font-size: 18px; font-weight: 600; color: #111827;">${overview.avg_market_price ? formatPrice(overview.avg_market_price) : 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 11px; color: #6b7280;">
+                        ${overview.total_snapshots} snapshots • ${overview.date_range.start} to ${overview.date_range.end}
+                    </div>
+                </div>
+                ${mostListed.length > 0 ? `
+                    <div style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">Most Listed:</div>
+                        ${mostListed.map(car => `
+                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">
+                                • ${car.make} ${car.model}: ${car.avg_listings} avg listings
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+        }
+        
+        async function loadSchedulerStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/scheduler/status`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displaySchedulerStatus(data);
+                }
+            } catch (error) {
+                console.error('Error loading scheduler status:', error);
+                document.getElementById('schedulerStatus').textContent = 'Error loading status';
+            }
+        }
+        
+        async function startScheduler() {
+            try {
+                const button = document.getElementById('schedulerStartBtn');
+                button.disabled = true;
+                
+                const response = await fetch(`${API_BASE_URL}/scheduler/start`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Scheduler started! ${data.message}`);
+                    await loadSchedulerStatus();
+                } else {
+                    alert('Failed to start scheduler');
+                }
+            } catch (error) {
+                console.error('Error starting scheduler:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                document.getElementById('schedulerStartBtn').disabled = false;
+            }
+        }
+        
+        async function stopScheduler() {
+            try {
+                const button = document.getElementById('schedulerStopBtn');
+                button.disabled = true;
+                
+                const response = await fetch(`${API_BASE_URL}/scheduler/stop`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`Scheduler stopped! ${data.message}`);
+                    await loadSchedulerStatus();
+                } else {
+                    alert('Failed to stop scheduler');
+                }
+            } catch (error) {
+                console.error('Error stopping scheduler:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                document.getElementById('schedulerStopBtn').disabled = false;
+            }
+        }
+        
+        function displaySchedulerStatus(data) {
+            const statusEl = document.getElementById('schedulerStatus');
+            
+            if (data.running) {
+                statusEl.innerHTML = `
+                    <span style="color: #10b981; font-weight: 600;">● Running</span> - 
+                    ${data.jobs.length} scheduled jobs
+                    ${data.jobs.length > 0 ? `<br><span style="font-size: 11px;">Next: ${data.jobs[0].name} at ${new Date(data.jobs[0].next_run).toLocaleTimeString()}</span>` : ''}
+                `;
+            } else {
+                statusEl.innerHTML = `<span style="color: #ef4444; font-weight: 600;">● Stopped</span> - Automated scraping is not running`;
+            }
+        }
+        
+        function filterListings() {
+            const platform = document.getElementById('platformFilter').value;
+            const filtered = platform 
+                ? allListings.filter(l => l.platform === platform)
+                : allListings;
+            
+            displayListings(filtered);
+            updateStats(filtered, allListings.length);
+        }
+        
+        function displayListings(listings) {
+            const tbody = document.getElementById('listingsBody');
+            const table = document.getElementById('listingsTable');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (listings.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            tbody.innerHTML = listings.map(listing => `
+                <tr>
+                    <td>
+                        <span class="platform-badge platform-${listing.platform}">
+                            ${listing.platform}
+                        </span>
+                    </td>
+                    <td>${listing.year || '-'}</td>
+                    <td>${listing.make || '-'}</td>
+                    <td>${listing.model || '-'}</td>
+                    <td class="price">${formatPrice(listing.price)}</td>
+                    <td>${formatMileage(listing.mileage)}</td>
+                    <td>${formatDate(listing.scraped_at)}</td>
+                    <td>
+                        <a href="${listing.url}" target="_blank" class="link-btn">
+                            View →
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+            
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+        }
+        
+        function updateStats(displayedListings, totalInDb) {
+            document.getElementById('totalCount').textContent = totalInDb;
+            document.getElementById('displayedCount').textContent = displayedListings.length;
+            
+            const avgPrice = calculateAveragePrice(displayedListings);
+            document.getElementById('avgPrice').textContent = formatPrice(avgPrice);
+        }
+        
+        function calculateAveragePrice(listings) {
+            const validPrices = listings.filter(l => l.price).map(l => l.price);
+            if (validPrices.length === 0) return null;
+            return validPrices.reduce((sum, price) => sum + price, 0) / validPrices.length;
+        }
+        
+        async function triggerScrape(platform) {
+            const btnId = platform === 'craigslist' ? 'scrapeBtn' : 'scrapeMercadoLibreBtn';
+            const btn = document.getElementById(btnId);
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '⏳ Scraping...';
+            clearError();
+            
+            try {
+                const endpoint = platform === 'craigslist' 
+                    ? `/scrape/craigslist?max_results=10`
+                    : `/scrape/mercadolibre?max_results=10&fetch_details=true`;
+                    
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) throw new Error(`Failed to trigger ${platform} scrape`);
+                
+                const data = await response.json();
+                alert(`${platform.toUpperCase()}: Scraped ${data.scraped} listings, saved ${data.saved_to_db} new ones, ${data.duplicates_skipped} duplicates skipped`);
+                
+                // Reload listings and analytics
+                await loadListings();
+                await loadAnalytics();
+                await loadPriceAnalytics();
+                await loadTrends();  // Phase 13
+                
+            } catch (error) {
+                showError(`Error scraping ${platform}: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+        
+        // Utility functions
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+        }
+        
+        function showEmptyState() {
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('listingsTable').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const container = document.getElementById('errorContainer');
+            container.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+        }
+        
+        function clearError() {
+            document.getElementById('errorContainer').innerHTML = '';
+        }
+        
+        function formatPrice(price) {
+            if (!price) return 'N/A';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(price);
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function formatMileage(kilometers) {
+            if (!kilometers) return '-';
+            return new Intl.NumberFormat('en-US').format(kilometers) + ' km';
+        }
+        
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ============================================================================
+        // AUTHENTICATION (Phase 16)
+        // ============================================================================
+        
+        let currentUser = null;
+        let authToken = null;
+        
+        function initAuth() {
+            // Load token from localStorage
+            authToken = localStorage.getItem('authToken');
+            
+            if (authToken) {
+                // Verify token is still valid
+                fetch(`${API_BASE_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        // Token invalid, clear it
+                        localStorage.removeItem('authToken');
+                        authToken = null;
+                        return null;
+                    }
+                })
+                .then(user => {
+                    if (user) {
+                        currentUser = user;
+                        updateAuthUI();
+                    }
+                })
+                .catch(error => {
+                    console.error('Auth verification error:', error);
+                    localStorage.removeItem('authToken');
+                    authToken = null;
+                });
+            }
+            
+            // Setup event listeners
+            document.getElementById('loginBtn').addEventListener('click', showLoginModal);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('authCancelBtn').addEventListener('click', hideLoginModal);
+            document.getElementById('authSubmitBtn').addEventListener('click', handleAuthSubmit);
+            document.getElementById('loginTab').addEventListener('click', () => switchTab('login'));
+            document.getElementById('registerTab').addEventListener('click', () => switchTab('register'));
+            
+            // Allow Enter key to submit
+            document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleAuthSubmit();
+            });
+            document.getElementById('registerPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleAuthSubmit();
+            });
+        }
+        
+        function updateAuthUI() {
+            if (currentUser) {
+                document.getElementById('userInfo').textContent = `👤 ${currentUser.username}`;
+                document.getElementById('userInfo').style.display = 'inline';
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('loginBtn').style.display = 'inline-block';
+                document.getElementById('logoutBtn').style.display = 'none';
+            }
+        }
+        
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('authError').textContent = '';
+            switchTab('login');
+        }
+        
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('authError').textContent = '';
+            // Clear form fields
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('registerEmail').value = '';
+            document.getElementById('registerUsername').value = '';
+            document.getElementById('registerPassword').value = '';
+        }
+        
+        function switchTab(tab) {
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginForm = document.getElementById('loginFormContent');
+            const registerForm = document.getElementById('registerFormContent');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            if (tab === 'login') {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                submitBtn.textContent = 'Login';
+                modalTitle.textContent = 'Login';
+            } else {
+                loginTab.classList.remove('active');
+                registerTab.classList.add('active');
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                submitBtn.textContent = 'Register';
+                modalTitle.textContent = 'Register';
+            }
+            
+            document.getElementById('authError').textContent = '';
+        }
+        
+        async function handleAuthSubmit() {
+            const isLogin = document.getElementById('loginTab').classList.contains('active');
+            const errorEl = document.getElementById('authError');
+            errorEl.textContent = '';
+            
+            try {
+                if (isLogin) {
+                    const username = document.getElementById('loginUsername').value;
+                    const password = document.getElementById('loginPassword').value;
+                    
+                    if (!username || !password) {
+                        errorEl.textContent = 'Please fill in all fields';
+                        return;
+                    }
+                    
+                    const response = await fetch(`${API_BASE_URL}/auth/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        authToken = data.access_token;
+                        currentUser = data.user;
+                        localStorage.setItem('authToken', authToken);
+                        updateAuthUI();
+                        hideLoginModal();
+                        showMessage(`Welcome back, ${currentUser.username}!`, 'success');
+                    } else {
+                        const error = await response.json();
+                        errorEl.textContent = error.detail || 'Login failed';
+                    }
+                } else {
+                    const email = document.getElementById('registerEmail').value;
+                    const username = document.getElementById('registerUsername').value;
+                    const password = document.getElementById('registerPassword').value;
+                    
+                    if (!email || !username || !password) {
+                        errorEl.textContent = 'Please fill in all fields';
+                        return;
+                    }
+                    
+                    const response = await fetch(`${API_BASE_URL}/auth/register?email=${encodeURIComponent(email)}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        showMessage('Registration successful! Please login.', 'success');
+                        switchTab('login');
+                        // Pre-fill username
+                        document.getElementById('loginUsername').value = username;
+                    } else {
+                        const error = await response.json();
+                        errorEl.textContent = error.detail || 'Registration failed';
+                    }
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                errorEl.textContent = 'An error occurred. Please try again.';
+            }
+        }
+        
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            updateAuthUI();
+            showMessage('Logged out successfully', 'info');
+        }
+        
+        function showMessage(message, type = 'info') {
+            // Reuse error container for success messages
+            const container = document.getElementById('errorContainer');
+            container.innerHTML = `
+                <div style="padding: 15px 30px; background: ${type === 'success' ? '#d4edda' : '#d1ecf1'}; 
+                     color: ${type === 'success' ? '#155724' : '#0c5460'}; border-bottom: 1px solid #dee2e6;">
+                    ${message}
+                </div>
+            `;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+

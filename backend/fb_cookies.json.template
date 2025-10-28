@@ -1,0 +1,20 @@
+{
+  "_comment": "Facebook Marketplace Cookie Template",
+  "_instructions": [
+    "1. Open Facebook in your browser and log in",
+    "2. Install a cookie export extension (e.g., 'Cookie Editor' or 'EditThisCookie')",
+    "3. Export all Facebook cookies",
+    "4. Paste them here, replacing this template",
+    "5. Save this file as 'fb_cookies.json' (remove .template)",
+    "6. Keep this file secure - it contains your session credentials!"
+  ],
+  "_example_format": {
+    "c_user": "YOUR_USER_ID",
+    "xs": "YOUR_XS_TOKEN",
+    "fr": "YOUR_FR_TOKEN",
+    "datr": "YOUR_DATR_TOKEN",
+    "sb": "YOUR_SB_TOKEN"
+  },
+  "_security_note": "Never commit fb_cookies.json to git! It's already in .gitignore"
+}
+
