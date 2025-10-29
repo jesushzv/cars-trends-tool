@@ -85,6 +85,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     
+    # Job-level permissions (required for pushing to GHCR)
+    permissions:
+      contents: read
+      packages: write
+    
     strategy:
       matrix:
         service: [backend, frontend]
@@ -162,6 +167,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push, scan-images]
     if: github.ref == 'refs/heads/main'
+    
+    # Job-level permissions (required for creating releases)
+    permissions:
+      contents: write
+      packages: read
     
     steps:
       - name: Checkout code
