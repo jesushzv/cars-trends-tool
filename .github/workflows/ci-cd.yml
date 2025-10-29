@@ -130,6 +130,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     
+    # Job-level permissions (required for uploading SARIF to Code Scanning)
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    
     strategy:
       matrix:
         service: [backend, frontend]
@@ -146,7 +152,9 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
-        if: always()
+          github_token: ${{ github.token }}
+        # Always upload results, but skip for forked PRs (token restrictions)
+        if: ${{ always() && github.event.pull_request == null }}
 
   # Job 4: Create GitHub Release (main branch only)
   release:
