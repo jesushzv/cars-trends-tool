@@ -23,6 +23,7 @@ env:
 permissions:
   contents: read
   packages: write
+  security-events: write  # Required for uploading code scanning results (Trivy SARIF)
 
 jobs:
   # Job 1: Run all tests
