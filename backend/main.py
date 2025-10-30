@@ -23,6 +23,7 @@ from services.analytics_service import (
 )
 from seed_data import seed_initial_data
 from services.scheduler_service import initialize_scheduler
+import os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -74,11 +75,15 @@ def startup_event():
         logger.error(f"⚠️  Data seeding failed: {e}")
         logger.error("   Application will continue but database may be empty")
     
-    # Step 3: Initialize and auto-start scheduler
+    # Step 3: Initialize and auto-start scheduler (configurable)
     logger.info("\nStep 3: Initializing scheduler...")
     try:
-        initialize_scheduler(auto_start=True)
-        logger.info("✅ Scheduler initialized and started")
+        enable_scheduler = os.getenv("ENABLE_SCHEDULER", "true").lower() not in ("false", "0", "no")
+        initialize_scheduler(auto_start=enable_scheduler)
+        if enable_scheduler:
+            logger.info("✅ Scheduler initialized and started")
+        else:
+            logger.info("⏸️  Scheduler initialized but auto-start is disabled (ENABLE_SCHEDULER=false)")
     except Exception as e:
         logger.error(f"⚠️  Scheduler initialization failed: {e}")
         logger.error("   Application will run but scheduled jobs won't execute")

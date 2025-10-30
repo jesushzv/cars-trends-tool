@@ -36,6 +36,7 @@ logs/
 # Facebook cookies (sensitive!)
 fb_cookies.json
 backend/fb_cookies.json
+backend/fb_cookies.json*
 
 # Debug files
 *debug*.html

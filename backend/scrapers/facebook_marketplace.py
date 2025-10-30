@@ -5,11 +5,10 @@ Phase 11: Third data source with engagement metrics
 NOTE: This scraper requires authentication (cookies) to work properly.
 See FB_MARKETPLACE_RESEARCH.md for details.
 
-SETUP REQUIRED:
-1. Log into Facebook in your browser
-2. Export cookies using browser extension
-3. Save to backend/fb_cookies.json
-4. Run the scraper
+SETUP REQUIRED (choose one):
+1. Preferred (Production): set env var FACEBOOK_COOKIES_JSON to a JSON object of cookies
+2. Local dev: export cookies and save to backend/fb_cookies.json
+3. Run the scraper
 
 The scraper uses Playwright for JavaScript rendering.
 """
@@ -386,26 +385,41 @@ def _extract_engagement_metrics(soup: BeautifulSoup, listing: Dict) -> None:
 
 def _load_cookies() -> Optional[Dict]:
     """
-    Load Facebook cookies from JSON file
+    Load Facebook cookies from environment variable or JSON file.
+    
+    Order of precedence:
+    1) FACEBOOK_COOKIES_JSON env var (JSON object)
+    2) backend/fb_cookies.json file (local development)
     
     Returns:
-        Dict of cookies or None if file doesn't exist or is invalid
+        Dict of cookies or None if neither source is available/valid
     """
-    cookie_file = os.path.join(os.path.dirname(__file__), '..', 'fb_cookies.json')
+    # 1) Environment variable (preferred for production)
+    env_val = os.getenv("FACEBOOK_COOKIES_JSON")
+    if env_val:
+        try:
+            cookies = json.loads(env_val)
+            if isinstance(cookies, dict) and cookies:
+                return cookies
+            else:
+                print("[WARN] FACEBOOK_COOKIES_JSON is set but is empty or not a JSON object")
+        except json.JSONDecodeError as e:
+            print(f"[ERROR] Invalid JSON in FACEBOOK_COOKIES_JSON: {e}")
+        except Exception as e:
+            print(f"[ERROR] Failed to parse FACEBOOK_COOKIES_JSON: {e}")
     
+    # 2) Fallback to local file for development
+    cookie_file = os.path.join(os.path.dirname(__file__), '..', 'fb_cookies.json')
     if not os.path.exists(cookie_file):
         return None
-    
     try:
         with open(cookie_file, 'r') as f:
             cookies = json.load(f)
-        
         # Check if it's the template file (has _comment key)
         if '_comment' in cookies or '_instructions' in cookies:
             print("[WARN] fb_cookies.json appears to be the template file")
             print("[WARN] Please replace with actual Facebook cookies")
             return None
-        
         return cookies
     except json.JSONDecodeError as e:
         print(f"[ERROR] Invalid JSON in fb_cookies.json: {e}")
