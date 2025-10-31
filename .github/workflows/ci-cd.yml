@@ -8,7 +8,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, staging, prod]
     paths:
       - 'backend/**'
       - 'frontend/**'

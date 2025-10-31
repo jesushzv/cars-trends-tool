@@ -1,0 +1,39 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [ prod ]
+    paths:
+      - 'deploy/digitalocean/app.prod.yaml'
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy-prod.yml'
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to DigitalOcean Production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_API_TOKEN }}
+
+      - name: Update App Spec
+        run: |
+          doctl apps update 9f7e7262-de3f-4231-bc4c-b272157f2e52 --spec deploy/digitalocean/app.prod.yaml
+
+      - name: Create Deployment
+        run: |
+          doctl apps create-deployment 9f7e7262-de3f-4231-bc4c-b272157f2e52
+
+      - name: Show Live URL
+        run: |
+          doctl apps get 9f7e7262-de3f-4231-bc4c-b272157f2e52 --format DefaultIngress --no-header || true

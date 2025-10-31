@@ -1,0 +1,38 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [ staging ]
+    paths:
+      - 'deploy/digitalocean/app.staging.yaml'
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy-staging.yml'
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to DigitalOcean Staging
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DO_API_TOKEN }}
+
+      - name: Update App Spec
+        run: |
+          doctl apps update e4319855-9b7c-413a-8ee5-00ded7d09798 --spec deploy/digitalocean/app.staging.yaml
+
+      - name: Create Deployment
+        run: |
+          doctl apps create-deployment e4319855-9b7c-413a-8ee5-00ded7d09798
+
+      - name: Show Live URL
+        run: |
+          doctl apps get e4319855-9b7c-413a-8ee5-00ded7d09798 --format DefaultIngress --no-header || true
