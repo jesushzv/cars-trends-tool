@@ -16,8 +16,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy requirements from backend when build context is repo root
+COPY backend/requirements.txt ./requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
@@ -42,8 +42,8 @@ WORKDIR /app
 # Copy Python dependencies from builder
 COPY --from=builder /root/.local /root/.local
 
-# Copy application code
-COPY . .
+# Copy only backend application code into image
+COPY backend/ .
 
 # Install Playwright browsers (for Facebook scraping)
 RUN playwright install chromium && \
